@@ -1,19 +1,16 @@
 # gicsurv
- A shiny app for analyzing generalized interval-censoring survival data. A dataset can have exact times, right-censored times, interval-censored times, double-interval-censored times and any combination of the above.
-
-
- To install, first install the `devtools` package:\
- `install.packages("devtools")
-
-
- Thereafter you can install the `gicsurv` package directly from github:\
- `devtools::install_github("jordache-ramjith/gicsurv")`
-
-
- Once installed, you may call the `gicsurv` library and run the app:\
- `library(gicsurv)`\
- `gicsurv()`
-
+ A shiny app for analyzing generalized interval-censoring survival data. A dataset can have exact times, right-censored times, interval-censored times, double-interval-censored times and any combination of the above.<br/>
+ <br/>
+ To install, first install the `devtools` package:<br/>
+ `install.packages("devtools")`<br/>
+<br/>
+ Thereafter you can install the `gicsurv` package directly from github:<br/>
+ `devtools::install_github("jordache-ramjith/gicsurv")`<br/>
+<br/>
+ Once installed, you may call the `gicsurv` library and run the app:<br/>
+ `library(gicsurv)`<br/>
+ `gicsurv()`<br/>
+<br/>
 
 ## Purpose of the app
 
