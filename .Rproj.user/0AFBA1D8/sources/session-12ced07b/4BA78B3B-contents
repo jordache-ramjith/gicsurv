@@ -1,5 +1,0 @@
-allout <- reactiveValues()
-
-cow <- reactive({
-  !is.null(xvars$covs())
-})

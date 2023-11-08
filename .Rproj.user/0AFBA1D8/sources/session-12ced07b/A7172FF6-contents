@@ -1,4 +1,0 @@
-waiting_screen <- shiny::tagList(
-  waiter::spin_ball(),
-  h4("Cool stuff loading... please be patient.")
-) 
