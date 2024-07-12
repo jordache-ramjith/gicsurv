@@ -28,6 +28,33 @@ gicsurv <- function(...){
 ui <- fluidPage(theme = shinythemes::shinytheme("superhero"),
                 titlePanel("Generalized interval-censoring survival analysis"),
                 waiter::useWaiter(), 
+                tags$head(
+                  tags$style(HTML("
+      /* Style for DataTable */
+      .dataTables_wrapper .dataTables_scroll .dataTables_scrollBody table.dataTable {
+        color: white; /* Set text color to white for table body */
+      }
+      .dataTables_wrapper .dataTables_scrollHead table.dataTable thead th {
+        color: white; /* Set text color to white for table headers */
+      }
+      .dataTables_wrapper .dataTables_paginate .paginate_button {
+        color: white; /* Set text color to white for pagination buttons */
+      }
+      .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background-color: #007bff; /* Example: Change background of current page */
+      }
+      .dataTables_wrapper .dataTables_filter input {
+        color: white; /* Set text color to white for search input */
+      }
+      .dataTables_wrapper .dataTables_info {
+        color: white; /* Set text color to white for 'Showing x to y of z entries' */
+      }
+      .dataTables_wrapper .dataTables_length select {
+        color: white; /* Set text color to white for 'Show x entries' dropdown */
+      }
+      /* Add more CSS rules as needed */
+    "))
+                ),
                 tabsetPanel(type="pills",
                             id = "inTabset3",
                             tabPanel(
@@ -63,7 +90,7 @@ ui <- fluidPage(theme = shinythemes::shinytheme("superhero"),
                                      column(12,
                                             uiOutput("spinner")),
                                      column(12,
-                                            shiny::dataTableOutput("pred_table"))
+                                            DT::DTOutput("pred_table"))
                               )
                             ),
                             tabPanel("READ ME",
@@ -457,7 +484,7 @@ server <- function(input, output, session) {
       
       
       
-      output$pred_table <-  shiny::renderDataTable(
+      output$pred_table <-  DT::renderDT(
         format(allout$pred_obj, digits = 2, nsmall=4), options = list(pageLength = 10, info = FALSE, lengthMenu = list(c(10,50,100,200, -1), c("10","50","100","200","All")),scrollX = TRUE) 
       )
       

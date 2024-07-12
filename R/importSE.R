@@ -21,7 +21,7 @@ importSE <- function(id) {
                  })
                  
                  
-                 output$contents <- shiny::renderDataTable(
+                 output$contents <- DT::renderDT(
                    dtreact(), options = list(pageLength = 10, info = FALSE, lengthMenu = list(c(10,50,100,200, -1), c("10","50","100","200","All")),scrollX = TRUE ) 
                  )
                  

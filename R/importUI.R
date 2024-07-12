@@ -41,7 +41,7 @@ importUI <- function(id) {
              actionButton("do4", "Run Analysis", icon("paper-plane"), class = "btn-primary")
            ),
            column(9,
-                  shiny::dataTableOutput(ns("contents"))))
+                  DT::DTOutput(ns("contents"))))
     
   )
 }
