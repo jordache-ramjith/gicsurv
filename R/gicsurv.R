@@ -11,6 +11,24 @@
 
 # Now create the UI -------------------------------------------------------
 
+ceiling_signif <- function(x) {
+  if (x == 0) return(0)
+  exponent <- floor(log10(abs(x)))
+  power <- 10^(exponent)
+  ceiling(x / power) * power
+}
+
+ceiling_signif2 <- function(x) {
+  if (x == 0) return(0)
+  exponent <- floor(log10(abs(x)))
+  power <- 10^(exponent - 2 +1)
+  ceiling(x / power) * power
+}
+
+maxyt <- function(data, time1, time2, time3){
+  ceiling_signif2(quantile(sort(unique(c(data[[time1]],data[[time2]],data[[time3]]))), probs=0.8)[[1]])
+}
+
 gicsurv <- function(...){
   
   library(shiny)
@@ -81,6 +99,8 @@ ui <- fluidPage(theme = shinythemes::shinytheme("superhero"),
                                 numericInput("maxtime","Maximum time in plot",value=100,min=1,step=1e25),
                                 numericInput("nboot","Number of simulations for confidence interval estimates", value=1000, min=500, step=500),
                                 textInput("xlabel","Text for time axis",value="Time"),h5(),
+                                textInput("y1label","Text for hazard axis",value="Hazard"),h5(),
+                                textInput("y2label","Text for survival axis",value="Survival"),h5(),
                                 selectInput('dev',"File type",choices=c("png","jpeg","pdf"),selected = "png"),
                                 downloadButton('downloadPlot', 'Download plot', class = "btn-success"),h5(),
                                 downloadButton('download',"Download the estimates", class = "btn-success")
@@ -88,11 +108,13 @@ ui <- fluidPage(theme = shinythemes::shinytheme("superhero"),
                               ),
                               column(width=9,
                                      column(12,
+                                            numericInput("maxhaz","Maximum hazard (zoom in)",value=0.05,min=0,step = 0.000001),
+                                     column(12,
                                             uiOutput("spinner")),
                                      column(12,
                                             DT::DTOutput("pred_table"))
                               )
-                            ),
+                            )),
                             tabPanel("READ ME",
                                      value="methods",
                                      column(12,
@@ -195,6 +217,11 @@ server <- function(input, output, session) {
     
     req(!allout$warner)
     
+    updateNumericInput(session, "maxtime", value = maxyt(data(),
+                                                         time1 = xvars$time1(),
+                                                         time2 = xvars$time2(),
+                                                         time3 = xvars$time3()))
+    
     if(cow()){
       
       waiter::waiter_show(html = waiting_screen, color = "#2a374a")
@@ -285,7 +312,7 @@ server <- function(input, output, session) {
                         K = input$K)
         
 
-        
+        updateNumericInput(session, "maxhaz", value = ceiling_signif(max(allout$pred_obj$haz.upr, na.rm=T)))
         
         allout$plot_obj <-
           function(){
@@ -300,7 +327,10 @@ server <- function(input, output, session) {
                 data = allout$pred_obj,
                 ggplot2::aes(x = time, ymin = haz.lwr, ymax = haz.upr, fill="hazard"),
                 alpha = 0.3
-              ) 
+              ) +
+              ggplot2::theme(axis.title.x = ggplot2::element_blank())+
+              ggplot2::coord_cartesian(ylim=c(0,input$maxhaz))+
+              ggplot2::ylab(input$y1label)
             
             
             plot3 = ggplot2::ggplot() +
@@ -309,10 +339,11 @@ server <- function(input, output, session) {
               ggplot2::ylab("Survival") +
               ggplot2::geom_ribbon(data = allout$pred_obj, ggplot2::aes(x = time, y = surv, ymin = surv.lwr, ymax = surv.upr, fill="survival"),
                           alpha = 0.3) +
-              ggplot2::xlab(input$xlabel)
+              ggplot2::xlab(input$xlabel)+
+              ggplot2::ylab(input$y2label)
             
             plotout = ggpubr::ggarrange(
-              plot1+ggplot2::theme(axis.title.x = ggplot2::element_blank()),
+              plot1,
               plot3,
               align = "h",
               nrow=2,
@@ -341,7 +372,10 @@ server <- function(input, output, session) {
                 fill = "grey",
                 alpha = 0.6
               )+
-              ggprism::theme_prism()
+              ggprism::theme_prism()+
+              ggplot2::theme(axis.title.x = ggplot2::element_blank())+
+              ggplot2::coord_cartesian(ylim=c(0,input$maxhaz))+
+              ggplot2::ylab(input$y1label)
             
             
             plot3 = ggplot2::ggplot(data = allout$pred_obj, ggplot2::aes(x = time, y = surv)) +
@@ -352,14 +386,16 @@ server <- function(input, output, session) {
                           fill = "grey",
                           alpha = 0.6) +
               ggplot2::xlab(input$xlabel)+
-              ggprism::theme_prism()
+              ggprism::theme_prism()+
+              ggplot2::ylab(input$y2label)
             
             plotout = ggpubr::ggarrange(
-              plot1+ggplot2::theme(axis.title.x = ggplot2::element_blank()),
+              plot1,
               plot3,
               align = "h",
               nrow=2,
-              ncol=1
+              ncol=1,
+              labels=c("A","B")
             )
             
             return(plotout)
@@ -390,7 +426,7 @@ server <- function(input, output, session) {
                         K = input$K)
         
         
-        
+        updateNumericInput(session, "maxhaz", value = ceiling_signif(max(allout$pred_obj$haz.upr, na.rm=T)))
         
         allout$plot_obj <-
           function(){
@@ -405,7 +441,10 @@ server <- function(input, output, session) {
                 data = allout$pred_obj,
                 ggplot2::aes(x = time, ymin = haz.lwr, ymax = haz.upr, fill="hazard"),
                 alpha = 0.3
-              ) 
+              ) +
+              ggplot2::theme(axis.title.x = ggplot2::element_blank())+
+              ggplot2::coord_cartesian(ylim=c(0,input$maxhaz))+
+              ggplot2::ylab(input$y1label)
             
             
             plot3 = ggplot2::ggplot() +
@@ -414,10 +453,11 @@ server <- function(input, output, session) {
               ggplot2::ylab("Survival") +
               ggplot2::geom_ribbon(data = allout$pred_obj, ggplot2::aes(x = time, y = surv, ymin = surv.lwr, ymax = surv.upr, fill="survival"),
                           alpha = 0.3) +
-              ggplot2::xlab(input$xlabel)
+              ggplot2::xlab(input$xlabel)+
+              ggplot2::ylab(input$y2label)
             
             plotout = ggpubr::ggarrange(
-              plot1+ggplot2::theme(axis.title.x = ggplot2::element_blank()),
+              plot1,
               plot3,
               align = "h",
               nrow=2,
@@ -446,7 +486,10 @@ server <- function(input, output, session) {
                 fill = "grey",
                 alpha = 0.6
               )+
-              ggprism::theme_prism()
+              ggprism::theme_prism()+
+              ggplot2::theme(axis.title.x = ggplot2::element_blank())+
+              ggplot2::coord_cartesian(ylim=c(0,input$maxhaz))+
+              ggplot2::ylab(input$y1label)
             
             
             plot3 = ggplot2::ggplot(data = allout$pred_obj, ggplot2::aes(x = time, y = surv)) +
@@ -457,14 +500,16 @@ server <- function(input, output, session) {
                           fill = "grey",
                           alpha = 0.6) +
               ggplot2::xlab(input$xlabel)+
-              ggprism::theme_prism()
+              ggprism::theme_prism()+
+              ggplot2::ylab(input$y2label)
             
             plotout = ggpubr::ggarrange(
-              plot1+ggplot2::theme(axis.title.x = ggplot2::element_blank()),
+              plot1,
               plot3,
               align = "h",
               nrow=2,
-              ncol=1
+              ncol=1,
+              labels=c("A","B")
             )
             
             return(plotout)
@@ -520,7 +565,7 @@ server <- function(input, output, session) {
   output$downloadPlot <- downloadHandler(
     filename = function() { paste0('baseline_plots.',input$dev) },
     content = function(file) {
-      ggplot2::ggsave(file, plot = allout$plot_obj2(), device = paste0(input$dev), dpi=300,width=8,height=8)
+      ggplot2::ggsave(file, plot = allout$plot_obj2(), device = paste0(input$dev), dpi=300,width=10,height=8)
     }
   )
   
